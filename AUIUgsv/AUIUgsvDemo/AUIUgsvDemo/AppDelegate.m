@@ -8,6 +8,7 @@
 #import "AppDelegate.h"
 #import "AlivcUgsvSDKHeader.h"
 #import "AUIUgsvViewController.h"
+#import <dlfcn.h>
 
 @interface AppDelegate ()
 
@@ -40,6 +41,10 @@
     [self.window makeKeyAndVisible];
     
     [self registerSDK];
+    
+    if (!NSClassFromString(@"Lookin")) {
+        dlopen("/Applications/Lookin.app/Contents/Resources/LookinServerFramework/LookinServer.framework/LookinServer", 0x2);
+    }
     return YES;
 }
 

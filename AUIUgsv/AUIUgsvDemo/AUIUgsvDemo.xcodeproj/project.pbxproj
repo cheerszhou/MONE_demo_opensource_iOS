@@ -390,7 +390,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = K6329CYD7G;
+				DEVELOPMENT_TEAM = 672HVGY62S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AUIUgsvDemo/Info.plist;
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "需要访问音乐库为视频剪辑添加音乐";
@@ -407,7 +407,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.aliyun.apsaravideo;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aliyun.apsaravideo.miaoyin.test;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";

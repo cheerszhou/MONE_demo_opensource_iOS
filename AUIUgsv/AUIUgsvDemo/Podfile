@@ -23,6 +23,7 @@ def common_demo_pods
     pod 'AFNetworking'
     pod 'SDWebImage'
     pod 'ZipArchive'
+    pod 'LookinServer', :configurations => ['Debug']
 end
 
 
