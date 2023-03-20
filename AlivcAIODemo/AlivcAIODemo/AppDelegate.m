@@ -21,6 +21,7 @@
 #ifdef AIO_DEMO_ENABLE_UGSV
 #import "AlivcUgsvSDKHeader.h"
 #endif
+#import <dlfcn.h>
 
 @interface AppDelegate ()
 
@@ -81,6 +82,9 @@
     [self setupQueen];
     
     [self setupCrash];
+    if (!NSClassFromString(@"Lookin")) {
+        dlopen("/Applications/Lookin.app/Contents/Resources/LookinServerFramework/LookinServer.framework/LookinServer", 0x2);
+    }
     return YES;
 }
 

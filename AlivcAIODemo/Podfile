@@ -41,6 +41,7 @@ end
 def aliyun_demo_aui_ugsv
   pod 'AUIUgsv/AliVCSDK_Premium_all', :path => '../AUIUgsv/'
   pod 'AUIUgsv/All', :path => '../AUIUgsv/'
+  pod 'LookinServer', :configurations => ['Debug']
 end
 
 
