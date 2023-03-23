@@ -16,6 +16,7 @@
 		41AA9E56290AAD42009A512B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 41AA9E54290AAD42009A512B /* LaunchScreen.storyboard */; };
 		41AA9E59290AAD42009A512B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 41AA9E58290AAD42009A512B /* main.m */; };
 		AB7F4D7CCA65E292889A739C /* libPods-AUIUgsvDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BEEF357E239C300E8E487784 /* libPods-AUIUgsvDemo.a */; };
+		D8AC3D3029CBF01600E00FA3 /* MYTestView.m in Sources */ = {isa = PBXBuildFile; fileRef = D8AC3D2F29CBF01600E00FA3 /* MYTestView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +38,8 @@
 		41AA9E60290AB75E009A512B /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/LaunchScreen.strings"; sourceTree = "<group>"; };
 		9496C2FFC06A580DBA4F6015 /* Pods-AUIUgsvDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AUIUgsvDemo.debug.xcconfig"; path = "Target Support Files/Pods-AUIUgsvDemo/Pods-AUIUgsvDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		BEEF357E239C300E8E487784 /* libPods-AUIUgsvDemo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AUIUgsvDemo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D8AC3D2E29CBF01600E00FA3 /* MYTestView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MYTestView.h; sourceTree = "<group>"; };
+		D8AC3D2F29CBF01600E00FA3 /* MYTestView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MYTestView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,6 +87,8 @@
 				41AA9E54290AAD42009A512B /* LaunchScreen.storyboard */,
 				41AA9E57290AAD42009A512B /* Info.plist */,
 				41AA9E58290AAD42009A512B /* main.m */,
+				D8AC3D2E29CBF01600E00FA3 /* MYTestView.h */,
+				D8AC3D2F29CBF01600E00FA3 /* MYTestView.m */,
 			);
 			path = AUIUgsvDemo;
 			sourceTree = "<group>";
@@ -242,6 +247,7 @@
 				41AA9E4E290AAD40009A512B /* ViewController.m in Sources */,
 				41AA9E48290AAD40009A512B /* AppDelegate.m in Sources */,
 				41AA9E59290AAD42009A512B /* main.m in Sources */,
+				D8AC3D3029CBF01600E00FA3 /* MYTestView.m in Sources */,
 				41AA9E4B290AAD40009A512B /* SceneDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -386,12 +392,26 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9496C2FFC06A580DBA4F6015 /* Pods-AUIUgsvDemo.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 672HVGY62S;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_ROOT}/Headers/Public\"",
+					"\"${PODS_ROOT}/Headers/Public/AFNetworking\"",
+					"\"${PODS_ROOT}/Headers/Public/AUIFoundation\"",
+					"\"${PODS_ROOT}/Headers/Public/AUIUgsv\"",
+					"\"${PODS_ROOT}/Headers/Public/AliyunOSSiOS\"",
+					"\"${PODS_ROOT}/Headers/Public/LookinServer\"",
+					"\"${PODS_ROOT}/Headers/Public/Masonry\"",
+					"\"${PODS_ROOT}/Headers/Public/SDWebImage\"",
+					"\"${PODS_ROOT}/Headers/Public/ZipArchive\"",
+					"\"$(SRCROOT)/AUIUgsvDemo/NHAVEditor\"",
+				);
 				INFOPLIST_FILE = AUIUgsvDemo/Info.plist;
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "需要访问音乐库为视频剪辑添加音乐";
 				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用摄像头进行拍摄视频";
@@ -402,6 +422,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -418,12 +439,26 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2A19591D0B4C4F2120370CD0 /* Pods-AUIUgsvDemo.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = K6329CYD7G;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_ROOT}/Headers/Public\"",
+					"\"${PODS_ROOT}/Headers/Public/AFNetworking\"",
+					"\"${PODS_ROOT}/Headers/Public/AUIFoundation\"",
+					"\"${PODS_ROOT}/Headers/Public/AUIUgsv\"",
+					"\"${PODS_ROOT}/Headers/Public/AliyunOSSiOS\"",
+					"\"${PODS_ROOT}/Headers/Public/LookinServer\"",
+					"\"${PODS_ROOT}/Headers/Public/Masonry\"",
+					"\"${PODS_ROOT}/Headers/Public/SDWebImage\"",
+					"\"${PODS_ROOT}/Headers/Public/ZipArchive\"",
+					"\"$(SRCROOT)/AUIUgsvDemo/NHAVEditor\"",
+				);
 				INFOPLIST_FILE = AUIUgsvDemo/Info.plist;
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "需要访问音乐库为视频剪辑添加音乐";
 				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用摄像头进行拍摄视频";
@@ -434,6 +469,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

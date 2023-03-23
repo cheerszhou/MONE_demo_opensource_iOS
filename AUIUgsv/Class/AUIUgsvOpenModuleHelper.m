@@ -13,7 +13,7 @@
 #import "AUIVideoRecorder.h"
 #import "AUIVideoCrop.h"
 #import "AUIMediaPublisher.h"
-
+#import "NHAVEditor.h"
 #import "AlivcUgsvSDKHeader.h"
 #ifndef USING_SVIDEO_BASIC
 #import "AUIVideoEditor.h"
@@ -117,6 +117,11 @@
 }
 @end
 
+
+@interface AUIUgsvOpenModuleHelper ()<NHAVEditorProtocol>
+@property (nonatomic, strong) NHAVEditor *mediaEditor;
+@property (nonatomic, strong) CALayer *watermarkLayer;
+@end
 
 @implementation AUIUgsvOpenModuleHelper
 
@@ -298,7 +303,8 @@ static AUIVideoOutputParam * s_convertRecordToEdit(AUIRecorderConfig *config) {
     [picker onSelectionCompleted:^(AUIPhotoPicker * _Nonnull sender, NSArray<AUIPhotoPickerResult *> * _Nonnull results) {
         if (results.firstObject && results.firstObject.filePath.length > 0) {
             [sender dismissViewControllerAnimated:NO completion:^{
-//                [self addwatermarktovideo:results.firstObject.filePath andVideoInfo:results.firstObject];
+                [self addwatermarktovideo:results.firstObject.filePath andVideoInfo:results.firstObject];
+//                [self addWatermarkWith:results.firstObject];
                 AUIVideoCrop *crop = [[AUIVideoCrop alloc] initWithFilePath:results.firstObject.filePath withParam:param];
                 crop.saveToAlbumExportCompleted = publishParam.saveToAlbum;
                 crop.needToPublish = publishParam.needToPublish;
@@ -326,13 +332,19 @@ static AUIVideoOutputParam * s_convertRecordToEdit(AUIRecorderConfig *config) {
 #endif
 }
 
++ (void)addWatermarkWith:(AUIPhotoPickerResult*)pickerResult {
+    AUIUgsvOpenModuleHelper* helper = [[AUIUgsvOpenModuleHelper alloc]init];
+    NSURL *sourceURL = [NSURL fileURLWithPath:pickerResult.filePath];
+    [helper.mediaEditor setInputVideoURL:sourceURL];
+}
+
 + (void)addwatermarktovideo:(NSString*)videoPath andVideoInfo:(AUIPhotoPickerResult*)videoInfo {
     //1.拿到资源
     
     NSDictionary *opts = [NSDictionary dictionaryWithObject:@(YES) forKey:AVURLAssetPreferPreciseDurationAndTimingKey];
-    //视频资源
-    AVURLAsset * videoAsset = [AVURLAsset URLAssetWithURL:[NSURL URLWithString:videoPath] options:opts];
-    //声音采集
+    //视频资源NSURL *sourceURL = [NSURL fileURLWithPath:pickerResult.filePath];
+    AVURLAsset * videoAsset = [AVURLAsset URLAssetWithURL:[NSURL fileURLWithPath:videoPath] options:opts];
+    AVAssetTrack *videoAssetTrack = [[videoAsset tracksWithMediaType:AVMediaTypeVideo] objectAtIndex:0];
     
     //2.创建视频合成文件
     AVMutableComposition *mixComposition = [[AVMutableComposition alloc] init];
@@ -343,7 +355,9 @@ static AUIVideoOutputParam * s_convertRecordToEdit(AUIRecorderConfig *config) {
     
     CMTime startTime = kCMTimeZero;
     CMTime endTime = CMTimeMakeWithSeconds(videoInfo.model.assetDuration, 300);
-    [videoTrack insertTimeRange:CMTimeRangeFromTimeToTime(startTime, endTime)
+    CMTime start = CMTimeMake(0, 1000);
+    CMTime duration = videoAssetTrack.timeRange.duration;
+    [videoTrack insertTimeRange:CMTimeRangeFromTimeToTime(start, duration)
                         ofTrack:[[videoAsset tracksWithMediaType:AVMediaTypeVideo] objectAtIndex:0]
                          atTime:kCMTimeZero error:nil];
     
@@ -359,7 +373,7 @@ static AUIVideoOutputParam * s_convertRecordToEdit(AUIRecorderConfig *config) {
     mainInstruction.timeRange = CMTimeRangeFromTimeToTime(kCMTimeZero, videoTrack.timeRange.duration);
     //在一个指令的时间范围内，某个轨道的状态
     AVMutableVideoCompositionLayerInstruction *videolayerInstruction = [AVMutableVideoCompositionLayerInstruction videoCompositionLayerInstructionWithAssetTrack:videoTrack];
-    AVAssetTrack *videoAssetTrack = [[videoAsset tracksWithMediaType:AVMediaTypeVideo] objectAtIndex:0];
+    
     BOOL isVideoAssetPortrait_  = NO;
     CGAffineTransform videoTransform = videoAssetTrack.preferredTransform;
     if (videoTransform.a == 0 && videoTransform.b == 1.0 && videoTransform.c == -1.0 && videoTransform.d == 0) {
@@ -397,42 +411,44 @@ static AUIVideoOutputParam * s_convertRecordToEdit(AUIRecorderConfig *config) {
     //水印
      CALayer *imgLayer = [CALayer layer];
      imgLayer.contents = (id)AUIUgsvGetImage(@"ic_ugsv_clipper").CGImage;
- //    imgLayer.bounds = CGRectMake(0, 0, size.width, size.height);
-     imgLayer.bounds = CGRectMake(0, 0, 210, 50);
+    CGSize imgSize = AUIUgsvGetImage(@"ic_ugsv_clipper").size;
+     imgLayer.bounds = CGRectMake(0,0, imgSize.width, imgSize.height);
      imgLayer.position = CGPointMake(naturalSize.width/2.0, naturalSize.height/2.0);
+//    imgLayer.position = CGPointMake(40, naturalSize.height - imgSize.height);
      
-     //第二个水印
-     CALayer *coverImgLayer = [CALayer layer];
-     coverImgLayer.contents = (id)AUIUgsvGetImage(@"ic_ugsv_more").CGImage;
- //    [coverImgLayer setContentsGravity:@"resizeAspect"];
-     coverImgLayer.bounds =  CGRectMake(50, 200,210, 50);
-     coverImgLayer.position = CGPointMake(naturalSize.width/4.0, naturalSize.height/4.0);
-     
+    
      // 2 - The usual overlay
-     CALayer *overlayLayer = [CALayer layer];
-//     [overlayLayer addSublayer:subtitle1Text];
-     [overlayLayer addSublayer:imgLayer];
-     overlayLayer.frame = CGRectMake(0, 0, naturalSize.width, naturalSize.height);
-     [overlayLayer setMasksToBounds:YES];
+//     CALayer *overlayLayer = [CALayer layer];
+////     [overlayLayer addSublayer:subtitle1Text];
+//     [overlayLayer addSublayer:imgLayer];
+//     overlayLayer.frame = CGRectMake(0, 0, naturalSize.width, naturalSize.height);
+//     [overlayLayer setMasksToBounds:YES];
      
      CALayer *parentLayer = [CALayer layer];
      CALayer *videoLayer = [CALayer layer];
      parentLayer.frame = CGRectMake(0, 0, naturalSize.width, naturalSize.height);
      videoLayer.frame = CGRectMake(0, 0, naturalSize.width, naturalSize.height);
      [parentLayer addSublayer:videoLayer];
-     [parentLayer addSublayer:overlayLayer];
-     [parentLayer addSublayer:coverImgLayer];
-     
-     //设置封面
-     CABasicAnimation *anima = [CABasicAnimation animationWithKeyPath:@"opacity"];
-     anima.fromValue = [NSNumber numberWithFloat:1.0f];
-     anima.toValue = [NSNumber numberWithFloat:0.0f];
-     anima.repeatCount = 0;
-     anima.duration = 5.0f;  //5s之后消失
-     [anima setRemovedOnCompletion:NO];
-     [anima setFillMode:kCAFillModeForwards];
-     anima.beginTime = AVCoreAnimationBeginTimeAtZero;
-     [coverImgLayer addAnimation:anima forKey:@"opacityAniamtion"];
+     [parentLayer addSublayer:imgLayer];
+//
+//    //第二个水印,并加入动画
+//    CALayer *coverImgLayer = [CALayer layer];
+//    coverImgLayer.contents = (id)AUIUgsvGetImage(@"ic_ugsv_more").CGImage;
+////    [coverImgLayer setContentsGravity:@"resizeAspect"];
+//    coverImgLayer.bounds =  CGRectMake(50, 200,210, 50);
+//    coverImgLayer.position = CGPointMake(naturalSize.width/4.0, naturalSize.height/4.0);
+//    [parentLayer addSublayer:coverImgLayer];
+//
+//     //设置封面
+//     CABasicAnimation *anima = [CABasicAnimation animationWithKeyPath:@"opacity"];
+//     anima.fromValue = [NSNumber numberWithFloat:1.0f];
+//     anima.toValue = [NSNumber numberWithFloat:0.0f];
+//     anima.repeatCount = 0;
+//     anima.duration = 5.0f;  //5s之后消失
+//     [anima setRemovedOnCompletion:NO];
+//     [anima setFillMode:kCAFillModeForwards];
+//     anima.beginTime = AVCoreAnimationBeginTimeAtZero;
+//     [coverImgLayer addAnimation:anima forKey:@"opacityAniamtion"];
      //主要是下面这个方法
     mainCompositionInst.animationTool = [AVVideoCompositionCoreAnimationTool
                                   videoCompositionCoreAnimationToolWithPostProcessingAsVideoLayer:videoLayer inLayer:parentLayer];
@@ -513,6 +529,16 @@ static AUIVideoOutputParam * s_convertRecordToEdit(AUIRecorderConfig *config) {
         }
     };
     [currentVC.navigationController pushViewController:publisher animated:YES];
+}
+
+#pragma mark - lazy
+
+- (NHAVEditor *)mediaEditor {
+  if (!_mediaEditor) {
+    _mediaEditor = [[NHAVEditor alloc] init];
+    _mediaEditor.delegate = self;
+  }
+  return _mediaEditor;
 }
 
 @end
