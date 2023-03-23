@@ -298,6 +298,7 @@ static AUIVideoOutputParam * s_convertRecordToEdit(AUIRecorderConfig *config) {
     [picker onSelectionCompleted:^(AUIPhotoPicker * _Nonnull sender, NSArray<AUIPhotoPickerResult *> * _Nonnull results) {
         if (results.firstObject && results.firstObject.filePath.length > 0) {
             [sender dismissViewControllerAnimated:NO completion:^{
+//                [self addwatermarktovideo:results.firstObject.filePath andVideoInfo:results.firstObject];
                 AUIVideoCrop *crop = [[AUIVideoCrop alloc] initWithFilePath:results.firstObject.filePath withParam:param];
                 crop.saveToAlbumExportCompleted = publishParam.saveToAlbum;
                 crop.needToPublish = publishParam.needToPublish;
@@ -324,6 +325,163 @@ static AUIVideoOutputParam * s_convertRecordToEdit(AUIRecorderConfig *config) {
     [currentVC.navigationController pushViewController:vc animated:YES];
 #endif
 }
+
++ (void)addwatermarktovideo:(NSString*)videoPath andVideoInfo:(AUIPhotoPickerResult*)videoInfo {
+    //1.拿到资源
+    
+    NSDictionary *opts = [NSDictionary dictionaryWithObject:@(YES) forKey:AVURLAssetPreferPreciseDurationAndTimingKey];
+    //视频资源
+    AVURLAsset * videoAsset = [AVURLAsset URLAssetWithURL:[NSURL URLWithString:videoPath] options:opts];
+    //声音采集
+    
+    //2.创建视频合成文件
+    AVMutableComposition *mixComposition = [[AVMutableComposition alloc] init];
+    
+    //3.视频轨道插入素材
+    AVMutableCompositionTrack *videoTrack = [mixComposition addMutableTrackWithMediaType:AVMediaTypeVideo
+                                                                        preferredTrackID:kCMPersistentTrackID_Invalid];
+    
+    CMTime startTime = kCMTimeZero;
+    CMTime endTime = CMTimeMakeWithSeconds(videoInfo.model.assetDuration, 300);
+    [videoTrack insertTimeRange:CMTimeRangeFromTimeToTime(startTime, endTime)
+                        ofTrack:[[videoAsset tracksWithMediaType:AVMediaTypeVideo] objectAtIndex:0]
+                         atTime:kCMTimeZero error:nil];
+    
+    //4.音频轨道
+    AVMutableCompositionTrack * audioTrack = [mixComposition addMutableTrackWithMediaType:AVMediaTypeAudio preferredTrackID:kCMPersistentTrackID_Invalid];
+    //音频采集通道
+    AVAssetTrack * audioAssetTrack = [[videoAsset tracksWithMediaType:AVMediaTypeAudio] firstObject];
+    [audioTrack insertTimeRange:CMTimeRangeFromTimeToTime(startTime, endTime) ofTrack:audioAssetTrack atTime:kCMTimeZero error:nil];
+    
+    //5.合成视频
+    //一个指令，决定一个timeRange内每个轨道的状态，包含多个layerInstruction
+    AVMutableVideoCompositionInstruction *mainInstruction = [AVMutableVideoCompositionInstruction videoCompositionInstruction];
+    mainInstruction.timeRange = CMTimeRangeFromTimeToTime(kCMTimeZero, videoTrack.timeRange.duration);
+    //在一个指令的时间范围内，某个轨道的状态
+    AVMutableVideoCompositionLayerInstruction *videolayerInstruction = [AVMutableVideoCompositionLayerInstruction videoCompositionLayerInstructionWithAssetTrack:videoTrack];
+    AVAssetTrack *videoAssetTrack = [[videoAsset tracksWithMediaType:AVMediaTypeVideo] objectAtIndex:0];
+    BOOL isVideoAssetPortrait_  = NO;
+    CGAffineTransform videoTransform = videoAssetTrack.preferredTransform;
+    if (videoTransform.a == 0 && videoTransform.b == 1.0 && videoTransform.c == -1.0 && videoTransform.d == 0) {
+        //        videoAssetOrientation_ = UIImageOrientationRight;
+        isVideoAssetPortrait_ = YES;
+    }
+    if (videoTransform.a == 0 && videoTransform.b == -1.0 && videoTransform.c == 1.0 && videoTransform.d == 0) {
+        //        videoAssetOrientation_ =  UIImageOrientationLeft;
+        isVideoAssetPortrait_ = YES;
+    }
+    //调整视频方向
+    [videolayerInstruction setTransform:videoAssetTrack.preferredTransform atTime:kCMTimeZero];
+    [videolayerInstruction setOpacity:0.0 atTime:endTime];
+    mainInstruction.layerInstructions = [NSArray arrayWithObjects:videolayerInstruction,nil];
+    
+    //6.AVMutableVideoComposition：管理所有视频轨道，可以决定最终视频的尺寸，裁剪需要在这里进行
+    AVMutableVideoComposition *mainCompositionInst = [AVMutableVideoComposition videoComposition];
+    
+    CGSize naturalSize;
+    if(isVideoAssetPortrait_){
+        naturalSize = CGSizeMake(videoAssetTrack.naturalSize.height, videoAssetTrack.naturalSize.width);
+    } else {
+        naturalSize = videoAssetTrack.naturalSize;
+    }
+    
+    float renderWidth, renderHeight;
+    renderWidth = naturalSize.width;
+    renderHeight = naturalSize.height;
+    mainCompositionInst.renderSize = CGSizeMake(renderWidth, renderHeight);
+    mainCompositionInst.renderSize = CGSizeMake(renderWidth, renderHeight);
+    mainCompositionInst.instructions = [NSArray arrayWithObject:mainInstruction];
+    mainCompositionInst.frameDuration = CMTimeMake(1, 25);
+    
+    //7.添加水印
+    //水印
+     CALayer *imgLayer = [CALayer layer];
+     imgLayer.contents = (id)AUIUgsvGetImage(@"ic_ugsv_clipper").CGImage;
+ //    imgLayer.bounds = CGRectMake(0, 0, size.width, size.height);
+     imgLayer.bounds = CGRectMake(0, 0, 210, 50);
+     imgLayer.position = CGPointMake(naturalSize.width/2.0, naturalSize.height/2.0);
+     
+     //第二个水印
+     CALayer *coverImgLayer = [CALayer layer];
+     coverImgLayer.contents = (id)AUIUgsvGetImage(@"ic_ugsv_more").CGImage;
+ //    [coverImgLayer setContentsGravity:@"resizeAspect"];
+     coverImgLayer.bounds =  CGRectMake(50, 200,210, 50);
+     coverImgLayer.position = CGPointMake(naturalSize.width/4.0, naturalSize.height/4.0);
+     
+     // 2 - The usual overlay
+     CALayer *overlayLayer = [CALayer layer];
+//     [overlayLayer addSublayer:subtitle1Text];
+     [overlayLayer addSublayer:imgLayer];
+     overlayLayer.frame = CGRectMake(0, 0, naturalSize.width, naturalSize.height);
+     [overlayLayer setMasksToBounds:YES];
+     
+     CALayer *parentLayer = [CALayer layer];
+     CALayer *videoLayer = [CALayer layer];
+     parentLayer.frame = CGRectMake(0, 0, naturalSize.width, naturalSize.height);
+     videoLayer.frame = CGRectMake(0, 0, naturalSize.width, naturalSize.height);
+     [parentLayer addSublayer:videoLayer];
+     [parentLayer addSublayer:overlayLayer];
+     [parentLayer addSublayer:coverImgLayer];
+     
+     //设置封面
+     CABasicAnimation *anima = [CABasicAnimation animationWithKeyPath:@"opacity"];
+     anima.fromValue = [NSNumber numberWithFloat:1.0f];
+     anima.toValue = [NSNumber numberWithFloat:0.0f];
+     anima.repeatCount = 0;
+     anima.duration = 5.0f;  //5s之后消失
+     [anima setRemovedOnCompletion:NO];
+     [anima setFillMode:kCAFillModeForwards];
+     anima.beginTime = AVCoreAnimationBeginTimeAtZero;
+     [coverImgLayer addAnimation:anima forKey:@"opacityAniamtion"];
+     //主要是下面这个方法
+    mainCompositionInst.animationTool = [AVVideoCompositionCoreAnimationTool
+                                  videoCompositionCoreAnimationToolWithPostProcessingAsVideoLayer:videoLayer inLayer:parentLayer];
+    
+    //8.获取文件路径导出视频
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    
+    NSString *myPathDocs =  [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.mp4",@"wartermark"]];
+    unlink([myPathDocs UTF8String]);
+    NSURL* videoUrl = [NSURL fileURLWithPath:myPathDocs];
+    AVAssetExportSession* exporter = [[AVAssetExportSession alloc] initWithAsset:mixComposition
+                                                presetName:AVAssetExportPresetHighestQuality];
+    exporter.outputURL=videoUrl;
+    exporter.outputFileType = AVFileTypeQuickTimeMovie;
+    exporter.shouldOptimizeForNetworkUse = YES;
+    exporter.videoComposition = mainCompositionInst;
+    [exporter exportAsynchronouslyWithCompletionHandler:^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            //这里是输出视频之后的操作，做你想做的
+            [self exportDidFinish:exporter];
+        });
+    }];
+}
++ (void)exportDidFinish:(AVAssetExportSession*)session {
+    if (session.status == AVAssetExportSessionStatusCompleted) {
+        NSURL *outputURL = session.outputURL;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            __block PHObjectPlaceholder *placeholder;
+            if (UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(outputURL.path)) {
+                NSError *error;
+                [[PHPhotoLibrary sharedPhotoLibrary] performChangesAndWait:^{
+                    PHAssetChangeRequest* createAssetRequest = [PHAssetChangeRequest creationRequestForAssetFromVideoAtFileURL:outputURL];
+                    placeholder = [createAssetRequest placeholderForCreatedAsset];
+                } error:&error];
+                if (error) {
+                    
+                    [AVToastView show:[NSString stringWithFormat:@"%@",error] view:[UIApplication sharedApplication].keyWindow position:AVToastViewPositionMid];
+                }
+                else{
+                    [AVToastView show:@"视频已经保存到相册" view:[UIApplication sharedApplication].keyWindow position:AVToastViewPositionMid];
+                }
+            }else {
+                [AVToastView show:@"视频保存相册失败，请设置软件读取相册权限" view:[UIApplication sharedApplication].keyWindow position:AVToastViewPositionMid];
+            }
+        });
+    }
+}
+
 
 + (void)openPickerToPublish:(UIViewController *)currentVC {
     __weak typeof(currentVC) weakVC = currentVC;
